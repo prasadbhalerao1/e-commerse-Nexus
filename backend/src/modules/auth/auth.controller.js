@@ -70,3 +70,43 @@ export const getMe = asyncHandler(async (req, res) => {
     }, 'User profile retrieved successfully')
   );
 });
+
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    throw new BadRequestError('Google ID Token is required');
+  }
+
+  try {
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+    if (!response.ok) {
+      throw new BadRequestError('Invalid Google ID Token');
+    }
+    const data = await response.json();
+    const { email, given_name, family_name, email_verified } = data;
+
+    if (!email_verified) {
+      throw new BadRequestError('Google email address is not verified');
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      const randomPassword = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+      const hashedPassword = await hashPassword(randomPassword);
+
+      user = await User.create({
+        firstName: given_name || 'Google',
+        lastName: family_name || 'User',
+        email,
+        password: hashedPassword,
+        role: 'user'
+      });
+
+      await Cart.create({ user: user._id, items: [] });
+    }
+
+    return sendTokenCookie(user, 200, res, 'Google SSO login successful');
+  } catch (error) {
+    throw new BadRequestError(error.message || 'Google SSO verification failed');
+  }
+});

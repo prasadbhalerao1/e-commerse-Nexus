@@ -81,6 +81,34 @@
         }
       }
     },
+    "/auth/google": {
+      "post": {
+        "summary": "Google SSO Sign-In",
+        "description": "Validates a Google ID token from the frontend, logs in or signs up the user, and returns an HttpOnly cookie.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["idToken"],
+                "properties": {
+                  "idToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated via Google SSO. Returns HttpOnly cookie."
+          },
+          "400": {
+            "description": "Invalid Google ID token."
+          }
+        }
+      }
+    },
     "/auth/logout": {
       "post": {
         "summary": "User Logout",
