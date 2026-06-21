@@ -2,10 +2,19 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import swaggerUi from 'swagger-ui-express';
 import routes from './routes.js';
 import globalErrorHandler from '../core/exceptions/globalErrorHandler.js';
 import { NotFoundError } from '../core/errors.js';
 import { apiLimiter } from '../common/middleware/rateLimiter.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const openapiPath = path.join(__dirname, '../docs/openapi.json');
+const openapiDoc = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
 
 const app = express();
 
@@ -25,6 +34,9 @@ app.use('/api', apiLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Swagger UI documentation server
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDoc));
 
 // API route entry point
 app.use('/api', routes);

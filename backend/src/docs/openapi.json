@@ -1,0 +1,406 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Project Nexus API Uplink",
+    "version": "1.0.0",
+    "description": "API documentation for the Project Nexus e-commerce system. Design style: Industrial Quantum Brutalism."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "System Health Check",
+        "description": "Verifies that the backend server core is active and returns the uptime.",
+        "responses": {
+          "200": {
+            "description": "Uplink healthy."
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "User Registration",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["firstName", "lastName", "email", "password"],
+                "properties": {
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully registered. Returns HttpOnly cookie."
+          },
+          "400": {
+            "description": "Validation failed or user already exists."
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "User Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully logged in. Returns HttpOnly cookie."
+          },
+          "401": {
+            "description": "Invalid credentials."
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "User Logout",
+        "responses": {
+          "200": {
+            "description": "Cookie cleared successfully."
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Fetch Logged-in Profile",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Returns current user details."
+          },
+          "401": {
+            "description": "Unauthorized."
+          }
+        }
+      }
+    },
+    "/users/profile": {
+      "put": {
+        "summary": "Update Profile Details",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated." }
+        }
+      }
+    },
+    "/users/addresses": {
+      "get": {
+        "summary": "Get Saved Addresses",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "List of addresses." }
+        }
+      },
+      "post": {
+        "summary": "Add Shipping Address",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["street", "city", "state", "zip", "country"],
+                "properties": {
+                  "street": { "type": "string" },
+                  "city": { "type": "string" },
+                  "state": { "type": "string" },
+                  "zip": { "type": "string" },
+                  "country": { "type": "string" },
+                  "isDefault": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Address added." }
+        }
+      }
+    },
+    "/users/addresses/{addressId}": {
+      "delete": {
+        "summary": "Remove Address",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Address removed." }
+        }
+      }
+    },
+    "/products/categories": {
+      "get": {
+        "summary": "Get Active Categories",
+        "responses": {
+          "200": { "description": "List of active categories." }
+        }
+      },
+      "post": {
+        "summary": "Create Category (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "slug"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "slug": { "type": "string" },
+                  "description": { "type": "string" },
+                  "parentCategory": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Category created." }
+        }
+      }
+    },
+    "/products/catalog": {
+      "get": {
+        "summary": "Query Products Catalog",
+        "description": "Faceted query returns catalog products matched using aggregation pipelines.",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "minPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "maxPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "tags", "in": "query", "schema": { "type": "string" } },
+          { "name": "minRating", "in": "query", "schema": { "type": "number" } },
+          { "name": "limit", "in": "query", "schema": { "type": "number", "default": 20 } },
+          { "name": "cursor", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Matched products & dynamic facets." }
+        }
+      }
+    },
+    "/products/slug/{slug}": {
+      "get": {
+        "summary": "Get Single Product Details",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Product document details." }
+        }
+      }
+    },
+    "/orders/cart": {
+      "get": {
+        "summary": "Get Authenticated Cart",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Persisted DB cart." }
+        }
+      }
+    },
+    "/orders/cart/sync": {
+      "post": {
+        "summary": "Merge Local Storage Cart",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items"],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["product", "quantity"],
+                      "properties": {
+                        "product": { "type": "string" },
+                        "quantity": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Merged cart state." }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Checkout Placement",
+        "description": "Places order. Performs server-side price validations and inventory checks. Supports guest checkout.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items", "shippingAddress", "billingAddress"],
+                "properties": {
+                  "guestEmail": { "type": "string", "format": "email" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["product", "qty"],
+                      "properties": {
+                        "product": { "type": "string" },
+                        "qty": { "type": "number" }
+                      }
+                    }
+                  },
+                  "shippingAddress": { "type": "object" },
+                  "billingAddress": { "type": "object" },
+                  "paymentMethod": { "type": "string", "enum": ["Stripe", "PayPal"] },
+                  "couponCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Order submitted successfully." }
+        }
+      }
+    },
+    "/orders/{id}/invoice": {
+      "get": {
+        "summary": "Download PDF Invoice",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Streams PDF format file." }
+        }
+      }
+    },
+    "/orders/{productId}/reviews": {
+      "post": {
+        "summary": "Post Product Review",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["rating", "title", "comment"],
+                "properties": {
+                  "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+                  "title": { "type": "string" },
+                  "comment": { "type": "string" },
+                  "images": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Review published." }
+        }
+      },
+      "get": {
+        "summary": "Get Product Reviews",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of reviews." }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token"
+      }
+    }
+  }
+}
