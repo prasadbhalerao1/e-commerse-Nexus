@@ -4,7 +4,7 @@ export const updateProfileSchema = z.object({
   body: z.object({
     firstName: z.string().min(1, 'First name is required').trim().optional(),
     lastName: z.string().min(1, 'Last name is required').trim().optional(),
-    email: z.string().min(1, 'Email is required').email('Invalid email address').lowercase().optional()
+    email: z.string().min(1, 'Email is required').email('Invalid email address').toLowerCase().optional()
   })
 });
 

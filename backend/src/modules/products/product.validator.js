@@ -12,7 +12,7 @@ export const categoryCreateSchema = z.object({
 
 export const productCreateSchema = z.object({
   body: z.object({
-    sku: z.string().min(1, 'SKU is required').uppercase().trim(),
+    sku: z.string().min(1, 'SKU is required').toUpperCase().trim(),
     name: z.string().min(1, 'Name is required').trim(),
     slug: z.string().min(1, 'Slug is required').toLowerCase().trim(),
     description: z.string().min(1, 'Description is required'),

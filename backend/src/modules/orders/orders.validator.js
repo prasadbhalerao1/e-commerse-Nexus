@@ -53,7 +53,7 @@ export const reviewCreateSchema = z.object({
 
 export const couponCreateSchema = z.object({
   body: z.object({
-    code: z.string().min(1, 'Code is required').uppercase().trim(),
+    code: z.string().min(1, 'Code is required').toUpperCase().trim(),
     discountType: z.enum(['percentage', 'fixed']),
     discountValue: z.number().min(1),
     minOrderValue: z.number().min(0).default(0),
