@@ -9,12 +9,14 @@ const cartItemSchema = new mongoose.Schema({
 const cartSchema = new mongoose.Schema({  
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },  
   items: [cartItemSchema],  
-  lastActive: { type: Date, default: Date.now } // Used for abandoned cart cron jobs  
+  lastActive: { type: Date, default: Date.now }, // Used for abandoned cart cron jobs  
+  abandonedEmailSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
-// Auto-update lastActive on save  
+// Auto-update lastActive and reset email status on save  
 cartSchema.pre('save', function(next) {  
   this.lastActive = Date.now();  
+  this.abandonedEmailSent = false;  
   next();  
 });
 

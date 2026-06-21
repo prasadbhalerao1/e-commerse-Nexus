@@ -238,3 +238,127 @@ export const searchAndFilterProducts = asyncHandler(async (req, res) => {
     }, 'Products matched and faceted successfully')
   );
 });
+
+// Admin bulk tools CSV export
+export const exportProductsCSV = asyncHandler(async (req, res) => {
+  const products = await Product.find({}).populate('category', 'name');
+  
+  let csvContent = 'SKU,Name,Price,CompareAtPrice,Stock,LowStockThreshold,Category,Tags,IsActive\n';
+  
+  for (const p of products) {
+    const sku = p.sku;
+    const name = `"${p.name.replace(/"/g, '""')}"`;
+    const price = p.price;
+    const comparePrice = p.compareAtPrice || '';
+    const stock = p.inventory.countInStock;
+    const threshold = p.inventory.lowStockThreshold;
+    const category = `"${(p.category?.name || '').replace(/"/g, '""')}"`;
+    const tags = `"${(p.tags || []).join(';')}"`;
+    const isActive = p.isActive;
+    
+    csvContent += `${sku},${name},${price},${comparePrice},${stock},${threshold},${category},${tags},${isActive}\n`;
+  }
+  
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename=products_export.csv');
+  return res.status(200).send(csvContent);
+});
+
+// Admin bulk tools CSV import
+export const importProductsCSV = asyncHandler(async (req, res) => {
+  const { csvData } = req.body;
+  if (!csvData) {
+    throw new BadRequestError('csvData string is required in request body');
+  }
+
+  const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
+  if (lines.length <= 1) {
+    throw new BadRequestError('CSV contains no data lines');
+  }
+
+  let successCount = 0;
+  let errors = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    let row = [];
+    let insideQuotes = false;
+    let currentField = '';
+    
+    for (let charIdx = 0; charIdx < line.length; charIdx++) {
+      const char = line[charIdx];
+      if (char === '"') {
+        insideQuotes = !insideQuotes;
+      } else if (char === ',' && !insideQuotes) {
+        row.push(currentField.trim().replace(/^"|"$/g, ''));
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
+    row.push(currentField.trim().replace(/^"|"$/g, ''));
+
+    if (row.length < 5) {
+      errors.push(`Line ${i + 1}: Insufficient fields (minimum 5 fields: SKU, Name, Price, Stock, Category required)`);
+      continue;
+    }
+
+    const [sku, name, priceStr, comparePriceStr, stockStr, thresholdStr, categoryName, tagsStr, isActiveStr] = row;
+
+    try {
+      if (!sku || !name || !priceStr || !stockStr || !categoryName) {
+        errors.push(`Line ${i + 1}: Missing mandatory values`);
+        continue;
+      }
+
+      // Find or create Category dynamically
+      const catSlug = categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      let category = await Category.findOne({ name: categoryName });
+      if (!category) {
+        category = await Category.create({
+          name: categoryName,
+          slug: catSlug,
+          description: `Automatically created during SKU import`
+        });
+      }
+
+      const price = Number(priceStr);
+      const compareAtPrice = comparePriceStr ? Number(comparePriceStr) : undefined;
+      const countInStock = Number(stockStr);
+      const lowStockThreshold = thresholdStr ? Number(thresholdStr) : 5;
+      const tags = tagsStr ? tagsStr.split(';').map(t => t.trim().toLowerCase()) : [];
+      const isActive = isActiveStr !== 'false';
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+      const productFields = {
+        sku: sku.toUpperCase(),
+        name,
+        slug,
+        description: `Imported item SKU ${sku}`,
+        price,
+        compareAtPrice,
+        inventory: {
+          countInStock,
+          lowStockThreshold
+        },
+        category: category._id,
+        tags,
+        isActive
+      };
+
+      await Product.findOneAndUpdate(
+        { sku: sku.toUpperCase() },
+        { $set: productFields },
+        { upsert: true, new: true, runValidators: true }
+      );
+
+      successCount++;
+    } catch (err) {
+      errors.push(`Line ${i + 1}: ${err.message}`);
+    }
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, { successCount, errors }, `Import complete. Processed ${successCount} products successfully.`)
+  );
+});

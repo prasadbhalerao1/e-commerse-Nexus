@@ -241,6 +241,68 @@
         }
       }
     },
+    "/products/cms": {
+      "get": {
+        "summary": "Get CMS Settings",
+        "description": "Retrieves homepage hero banner and featured products.",
+        "responses": {
+          "200": { "description": "CMS settings." }
+        }
+      },
+      "put": {
+        "summary": "Update CMS Settings (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "heroBanner": { "type": "object" },
+                  "featuredProducts": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "CMS settings updated." }
+        }
+      }
+    },
+    "/products/admin/export": {
+      "get": {
+        "summary": "Export Products CSV (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Downloads products CSV." }
+        }
+      }
+    },
+    "/products/admin/import": {
+      "post": {
+        "summary": "Import Products CSV (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["csvData"],
+                "properties": {
+                  "csvData": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Import results (success count & validation errors)." }
+        }
+      }
+    },
     "/products/catalog": {
       "get": {
         "summary": "Query Products Catalog",
@@ -282,6 +344,15 @@
         "security": [{ "cookieAuth": [] }],
         "responses": {
           "200": { "description": "Persisted DB cart." }
+        }
+      }
+    },
+    "/orders/admin/analytics": {
+      "get": {
+        "summary": "Get Admin Analytics (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Returns GMV, conversion rates, active carts count, and 30-day sales history." }
         }
       }
     },

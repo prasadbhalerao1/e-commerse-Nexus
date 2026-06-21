@@ -11,7 +11,8 @@ import {
   updateOrderStatus, 
   createReview, 
   getProductReviews, 
-  downloadInvoice 
+  downloadInvoice,
+  getAdminAnalytics
 } from './orders.controller.js';
 import { 
   cartSyncSchema, 
@@ -41,6 +42,7 @@ router.post('/', (req, res, next) => {
 }, validate(orderCreateSchema), createOrder);
 
 router.get('/my', protect, getMyOrders);
+router.get('/admin/analytics', protect, restrictTo('superadmin', 'editor'), getAdminAnalytics);
 router.get('/admin/all', protect, restrictTo('superadmin', 'editor'), getAllOrdersAdmin);
 router.put('/admin/:id', protect, restrictTo('superadmin', 'editor'), updateOrderStatus);
 router.get('/:id', protect, getOrderById);

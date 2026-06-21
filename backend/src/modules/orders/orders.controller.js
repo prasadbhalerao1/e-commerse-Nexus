@@ -513,3 +513,49 @@ export const downloadInvoice = asyncHandler(async (req, res) => {
 
   doc.end();
 });
+
+export const getAdminAnalytics = asyncHandler(async (req, res) => {
+  const gmvData = await Order.aggregate([
+    { $match: { 'payment.status': 'Completed' } },
+    { $group: { _id: null, totalSales: { $sum: '$financials.total' } } }
+  ]);
+  const gmv = gmvData[0]?.totalSales || 0;
+
+  const activeCarts = await Cart.countDocuments({
+    items: { $exists: true, $not: { $size: 0 } }
+  });
+
+  const totalCarts = await Cart.countDocuments({});
+  const totalOrders = await Order.countDocuments({ 'payment.status': 'Completed' });
+  const conversionRate = totalCarts > 0 ? (totalOrders / totalCarts) * 100 : 0;
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const salesHistory = await Order.aggregate([
+    {
+      $match: {
+        'payment.status': 'Completed',
+        createdAt: { $gte: thirtyDaysAgo }
+      }
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        sales: { $sum: '$financials.total' },
+        ordersCount: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      analytics: {
+        gmv: Math.round(gmv * 100) / 100,
+        activeCarts,
+        totalOrders,
+        conversionRate: Math.round(conversionRate * 100) / 100,
+        salesHistory
+      }
+    }, 'Admin analytics fetched successfully')
+  );
+});

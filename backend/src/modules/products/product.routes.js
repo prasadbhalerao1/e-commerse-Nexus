@@ -7,13 +7,20 @@ import {
   updateProduct, 
   deleteProduct, 
   getProductBySlug, 
-  searchAndFilterProducts 
+  searchAndFilterProducts,
+  exportProductsCSV,
+  importProductsCSV
 } from './product.controller.js';
+import { getCMS, updateCMS } from './cms.controller.js';
 import { categoryCreateSchema, productCreateSchema } from './product.validator.js';
 import { validate } from '../../common/middleware/validate.js';
 import { protect, restrictTo } from '../../common/middleware/auth.js';
 
 const router = Router();
+
+// CMS Routes
+router.get('/cms', getCMS);
+router.put('/cms', protect, restrictTo('superadmin', 'editor'), updateCMS);
 
 // Public routes
 router.get('/categories', getCategories);
@@ -27,5 +34,8 @@ router.get('/admin/categories', protect, restrictTo('superadmin', 'editor'), get
 router.post('/', protect, restrictTo('superadmin', 'editor'), validate(productCreateSchema), createProduct);
 router.put('/:id', protect, restrictTo('superadmin', 'editor'), updateProduct);
 router.delete('/:id', protect, restrictTo('superadmin', 'editor'), deleteProduct);
+
+router.get('/admin/export', protect, restrictTo('superadmin', 'editor'), exportProductsCSV);
+router.post('/admin/import', protect, restrictTo('superadmin', 'editor'), importProductsCSV);
 
 export default router;

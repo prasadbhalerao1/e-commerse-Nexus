@@ -3,6 +3,7 @@ import app from './app.js';
 import connectDB from '../config/database.js';
 import redisClient from '../config/redis.js';
 import { initSocket } from '../modules/notifications/socket.js';
+import { startCartRecoveryInterval } from '../jobs/cartRecovery.js';
 import logger from '../config/logger.js';
 import env from '../config/env.js';
 
@@ -17,6 +18,9 @@ const startServer = async () => {
 
   // Initialize socket.io connection handlers
   initSocket(server);
+
+  // Start abandoned cart recovery background scheduler
+  startCartRecoveryInterval();
 
   // Launch HTTP Server listener
   const PORT = env.PORT;
