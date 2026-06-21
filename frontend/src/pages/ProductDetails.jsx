@@ -234,11 +234,11 @@ export default function ProductDetails() {
         
         {/* Carousel Image Panel */}
         <div className="w-full md:w-1/2 space-y-4">
-          <div className="relative aspect-square border border-acid/20 rounded bg-void overflow-hidden flex items-center justify-center">
+          <div className="relative aspect-square border border-acid/20 rounded bg-void overflow-hidden flex items-center justify-center group">
             <img 
               src={images[activeImageIndex]?.url} 
               alt={images[activeImageIndex]?.altText || product.name} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125 cursor-zoom-in"
             />
             {product.compareAtPrice && product.compareAtPrice > product.price && (
               <span className="absolute top-4 left-4 px-2 py-0.5 text-xs font-arcade bg-hazard text-void font-bold shadow-hazard rounded-sm">
