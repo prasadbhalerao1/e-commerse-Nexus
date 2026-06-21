@@ -22,7 +22,7 @@ export default function Navbar({ onToggleCart }) {
         </Link>
 
         {/* Navigation Uplink */}
-        <nav className="hidden md:flex items-center gap-8 font-mono text-sm tracking-wider">
+        <nav className="flex items-center gap-3 sm:gap-6 md:gap-8 font-mono text-[10px] sm:text-xs md:text-sm tracking-wider">
           <Link to="/" className="text-soft-ash hover:text-acid hover:underline underline-offset-4 transition-colors">
             //_HOME
           </Link>
@@ -34,7 +34,8 @@ export default function Navbar({ onToggleCart }) {
           {user && (user.role === 'admin' || user.role === 'superadmin' || user.role === 'editor') && (
             <Link to="/admin" className="flex items-center gap-1 text-hazard hover:text-acid hover:underline underline-offset-4 transition-colors">
               <Shield className="h-3.5 w-3.5" />
-              //_ADMIN_NEXUS
+              <span className="hidden sm:inline">//_ADMIN_NEXUS</span>
+              <span className="sm:hidden">//_ADMIN</span>
             </Link>
           )}
         </nav>

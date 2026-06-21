@@ -198,22 +198,22 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabs list selector */}
-      <div className="flex border border-acid/20 rounded bg-sludge text-xs">
+      <div className="flex flex-col sm:flex-row border border-acid/20 rounded bg-sludge text-xs">
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`flex-1 py-3 font-bold border-r border-acid/15 flex items-center justify-center gap-1.5 transition-all ${activeTab === 'analytics' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
+          className={`flex-1 py-3 font-bold border-b sm:border-b-0 sm:border-r border-acid/15 flex items-center justify-center gap-1.5 transition-all ${activeTab === 'analytics' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
         >
           <BarChart3 className="h-4 w-4" /> ANALYTICS
         </button>
         <button
           onClick={() => setActiveTab('fulfillment')}
-          className={`flex-1 py-3 font-bold border-r border-acid/15 flex items-center justify-center gap-1.5 transition-all ${activeTab === 'fulfillment' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
+          className={`flex-1 py-3 font-bold border-b sm:border-b-0 sm:border-r border-acid/15 flex items-center justify-center gap-1.5 transition-all ${activeTab === 'fulfillment' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
         >
           <ListFilter className="h-4 w-4" /> fulfillment
         </button>
         <button
           onClick={() => setActiveTab('inventory')}
-          className={`flex-1 py-3 font-bold border-r border-acid/15 flex items-center justify-center gap-1.5 transition-all ${activeTab === 'inventory' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
+          className={`flex-1 py-3 font-bold border-b sm:border-b-0 sm:border-r border-acid/15 flex items-center justify-center gap-1.5 transition-all ${activeTab === 'inventory' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
         >
           <FileSpreadsheet className="h-4 w-4" /> SKU_INVENTORY
         </button>
