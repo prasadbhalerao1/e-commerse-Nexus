@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import User from './src/modules/users/User.js';
 import Category from './src/modules/products/Category.js';
 import Product from './src/modules/products/Product.js';
+import CMS from './src/modules/products/CMS.js';
 import Coupon from './src/modules/orders/Coupon.js';
 import Cart from './src/modules/orders/Cart.js';
 import { hashPassword } from './src/core/security/bcrypt.js';
@@ -23,6 +24,7 @@ const seedData = async () => {
     await Product.deleteMany({});
     await Coupon.deleteMany({});
     await Cart.deleteMany({});
+    await CMS.deleteMany({});
     console.log('Cleared existing collections.');
 
     // Password hash (shared)
@@ -164,6 +166,20 @@ const seedData = async () => {
     });
 
     console.log('Coupons seeded.');
+
+    // Seed CMS homepage configurations
+    await CMS.create({
+      key: 'homepage',
+      heroBanner: {
+        title: 'PROJECT NEXUS // DIRECT UPLINK',
+        subtitle: 'Secure radioactive gears, hacking rigs, and synaptic cyber-augments.',
+        imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800',
+        ctaText: 'INITIALIZE DIRECTORY'
+      },
+      featuredProducts: [p1._id, p3._id]
+    });
+    console.log('CMS configurations seeded.');
+
     console.log('Seeding complete. Exiting.');
     process.exit(0);
   } catch (error) {
