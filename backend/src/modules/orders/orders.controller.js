@@ -9,6 +9,7 @@ import { NotFoundError, BadRequestError, ForbiddenError } from '../../core/error
 import asyncHandler from '../../common/utils/asyncHandler.js';
 import ApiResponse from '../../core/responses/ApiResponse.js';
 import mailService from '../../common/services/mail.service.js';
+import { emitStockUpdate } from '../notifications/socket.js';
 
 // --- CART MODULE ---
 export const getCart = asyncHandler(async (req, res) => {
@@ -208,11 +209,16 @@ export const createOrder = asyncHandler(async (req, res) => {
   // Generate clean sequential/random order identifier
   const orderNumber = `NEX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-  // Deduct inventory
+  // Deduct inventory and emit real-time stock alert
   for (const item of items) {
-    await Product.findByIdAndUpdate(item.product, {
-      $inc: { 'inventory.countInStock': -item.qty }
-    });
+    const updatedProduct = await Product.findByIdAndUpdate(
+      item.product,
+      { $inc: { 'inventory.countInStock': -item.qty } },
+      { new: true }
+    );
+    if (updatedProduct) {
+      emitStockUpdate(item.product, updatedProduct.inventory.countInStock);
+    }
   }
 
   const order = await Order.create({
