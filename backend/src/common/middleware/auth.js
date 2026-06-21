@@ -1,6 +1,6 @@
 import { UnauthorizedError, ForbiddenError } from '../../core/errors.js';
 import { verifyToken } from '../../core/security/jwt.js';
-import User from '../../modules/users/User.js';
+import User from '../../modules/users/User.model.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 export const protect = asyncHandler(async (req, res, next) => {

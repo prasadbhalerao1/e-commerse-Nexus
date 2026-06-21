@@ -1,140 +1,14 @@
 import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
-import Order from './Order.js';
-import Cart from './Cart.js';
-import Coupon from './Coupon.js';
-import Review from './Review.js';
-import Product from '../products/Product.js';
+import Order from './Order.model.js';
+import Cart from '../cart/Cart.model.js';
+import Coupon from '../coupons/Coupon.model.js';
+import Product from '../products/Product.model.js';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../../core/errors.js';
 import asyncHandler from '../../common/utils/asyncHandler.js';
 import ApiResponse from '../../core/responses/ApiResponse.js';
 import mailService from '../../common/services/mail.service.js';
 import { emitStockUpdate } from '../notifications/socket.js';
-
-// --- CART MODULE ---
-export const getCart = asyncHandler(async (req, res) => {
-  let cart = await Cart.findOne({ user: req.user._id }).populate('items.product', 'name price slug images inventory');
-  if (!cart) {
-    cart = await Cart.create({ user: req.user._id, items: [] });
-  }
-  return res.status(200).json(
-    new ApiResponse(200, { cart }, 'Cart retrieved successfully')
-  );
-});
-
-export const syncCart = asyncHandler(async (req, res) => {
-  const { items } = req.body; // Array of { product: id, quantity: number }
-  
-  let cart = await Cart.findOne({ user: req.user._id });
-  if (!cart) {
-    cart = new Cart({ user: req.user._id, items: [] });
-  }
-
-  const mergedItems = [];
-
-  // Merge frontend localStorage cart with user's DB cart
-  for (const localItem of items) {
-    const product = await Product.findById(localItem.product);
-    if (!product || !product.isActive) continue;
-
-    // Check if item already exists in DB cart
-    const existingIndex = cart.items.findIndex(
-      (dbItem) => dbItem.product.toString() === localItem.product
-    );
-
-    if (existingIndex > -1) {
-      // Use the higher quantity or combine them (we take the max quantity)
-      const quantity = Math.max(cart.items[existingIndex].quantity, localItem.quantity);
-      mergedItems.push({
-        product: product._id,
-        quantity,
-        priceAtAdded: product.price
-      });
-    } else {
-      mergedItems.push({
-        product: product._id,
-        quantity: localItem.quantity,
-        priceAtAdded: product.price
-      });
-    }
-  }
-
-  // Preserve existing DB cart items that are not in local storage sync
-  for (const dbItem of cart.items) {
-    const inMerged = mergedItems.find(
-      (mItem) => mItem.product.toString() === dbItem.product.toString()
-    );
-    if (!inMerged) {
-      const product = await Product.findById(dbItem.product);
-      if (product && product.isActive) {
-        mergedItems.push({
-          product: dbItem.product,
-          quantity: dbItem.quantity,
-          priceAtAdded: dbItem.priceAtAdded
-        });
-      }
-    }
-  }
-
-  cart.items = mergedItems;
-  await cart.save();
-
-  const populatedCart = await Cart.findById(cart._id).populate('items.product', 'name price slug images inventory');
-
-  return res.status(200).json(
-    new ApiResponse(200, { cart: populatedCart }, 'Cart synchronized successfully')
-  );
-});
-
-
-// --- COUPON MODULE ---
-export const createCoupon = asyncHandler(async (req, res) => {
-  const { code, discountType, discountValue, minOrderValue, usageLimit, expiresAt } = req.body;
-
-  const existing = await Coupon.findOne({ code: code.toUpperCase() });
-  if (existing) {
-    throw new BadRequestError('Coupon code already exists');
-  }
-
-  const coupon = await Coupon.create({
-    code: code.toUpperCase(),
-    discountType,
-    discountValue,
-    minOrderValue,
-    usageLimit,
-    expiresAt: new Date(expiresAt)
-  });
-
-  return res.status(201).json(
-    new ApiResponse(201, { coupon }, 'Coupon created successfully')
-  );
-});
-
-export const validateCoupon = asyncHandler(async (req, res) => {
-  const { code, orderValue } = req.query;
-
-  const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
-  if (!coupon) {
-    throw new NotFoundError('Invalid coupon code');
-  }
-
-  if (coupon.expiresAt < new Date()) {
-    throw new BadRequestError('Coupon code has expired');
-  }
-
-  if (coupon.usageLimit !== null && coupon.timesUsed >= coupon.usageLimit) {
-    throw new BadRequestError('Coupon code usage limit exceeded');
-  }
-
-  if (Number(orderValue) < coupon.minOrderValue) {
-    throw new BadRequestError(`Minimum order value of $${coupon.minOrderValue} required for this coupon`);
-  }
-
-  return res.status(200).json(
-    new ApiResponse(200, { coupon }, 'Coupon code is valid')
-  );
-});
-
 
 // --- CHECKOUT & ORDER MODULE ---
 export const createOrder = asyncHandler(async (req, res) => {
@@ -327,58 +201,6 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 
   return res.status(200).json(
     new ApiResponse(200, { order }, 'Order status updated successfully')
-  );
-});
-
-
-// --- REVIEWS ENGINE ---
-export const createReview = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-  const { rating, title, comment, images } = req.body;
-
-  const product = await Product.findById(productId);
-  if (!product) {
-    throw new NotFoundError('Product not found');
-  }
-
-  // Verify product purchase by user
-  const orderExists = await Order.findOne({
-    user: req.user._id,
-    'items.product': productId,
-    'payment.status': 'Completed'
-  });
-
-  const isVerifiedPurchase = !!orderExists;
-
-  const review = await Review.create({
-    product: productId,
-    user: req.user._id,
-    rating,
-    title,
-    comment,
-    images: images || [],
-    isVerifiedPurchase
-  });
-
-  // Recalculate average rating on product atomically
-  const reviews = await Review.find({ product: productId });
-  const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
-
-  product.reviews.totalReviews = totalReviews;
-  product.reviews.averageRating = Math.round(averageRating * 10) / 10;
-  await product.save();
-
-  return res.status(201).json(
-    new ApiResponse(201, { review }, 'Review posted successfully')
-  );
-});
-
-export const getProductReviews = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-  const reviews = await Review.find({ product: productId }).populate('user', 'firstName lastName').sort({ createdAt: -1 });
-  return res.status(200).json(
-    new ApiResponse(200, { reviews }, 'Product reviews fetched successfully')
   );
 });
 

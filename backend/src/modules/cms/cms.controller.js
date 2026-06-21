@@ -1,11 +1,10 @@
-import CMS from './CMS.js';
+import CMS from './CMS.model.js';
 import asyncHandler from '../../common/utils/asyncHandler.js';
 import ApiResponse from '../../core/responses/ApiResponse.js';
 
 export const getCMS = asyncHandler(async (req, res) => {
   let cms = await CMS.findOne({ key: 'homepage' }).populate('featuredProducts', 'name price slug images inventory');
   if (!cms) {
-    // Initialize default homepage configurations if missing
     cms = await CMS.create({
       key: 'homepage',
       heroBanner: {

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import Product from './Product.js';
-import Category from './Category.js';
+import Product from './Product.model.js';
+import Category from './Category.model.js';
 import { NotFoundError, BadRequestError } from '../../core/errors.js';
 import asyncHandler from '../../common/utils/asyncHandler.js';
 import ApiResponse from '../../core/responses/ApiResponse.js';

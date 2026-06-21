@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
   },  
   addresses: [addressSchema],  
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],  
-  stripeCustomerId: { type: String } // Stored as placeholder
+  stripeCustomerId: { type: String } // Placeholder
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

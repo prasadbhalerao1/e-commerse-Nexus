@@ -1,4 +1,4 @@
-import User from './User.js';
+import User from './User.model.js';
 import { NotFoundError, BadRequestError } from '../../core/errors.js';
 import asyncHandler from '../../common/utils/asyncHandler.js';
 import ApiResponse from '../../core/responses/ApiResponse.js';

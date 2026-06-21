@@ -11,16 +11,11 @@ import {
   exportProductsCSV,
   importProductsCSV
 } from './product.controller.js';
-import { getCMS, updateCMS } from './cms.controller.js';
 import { categoryCreateSchema, productCreateSchema } from './product.validator.js';
 import { validate } from '../../common/middleware/validate.js';
 import { protect, restrictTo } from '../../common/middleware/auth.js';
 
 const router = Router();
-
-// CMS Routes
-router.get('/cms', getCMS);
-router.put('/cms', protect, restrictTo('superadmin', 'editor'), updateCMS);
 
 // Public routes
 router.get('/categories', getCategories);

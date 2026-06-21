@@ -1,5 +1,5 @@
-import User from '../users/User.js';
-import Cart from '../orders/Cart.js';
+import User from '../users/User.model.js';
+import Cart from '../cart/Cart.model.js';
 import { BadRequestError, UnauthorizedError } from '../../core/errors.js';
 import { hashPassword, comparePassword } from '../../core/security/bcrypt.js';
 import { sendTokenCookie } from '../../common/utils/generateTokens.js';

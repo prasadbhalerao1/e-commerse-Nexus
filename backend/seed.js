@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import User from './src/modules/users/User.js';
-import Category from './src/modules/products/Category.js';
-import Product from './src/modules/products/Product.js';
-import CMS from './src/modules/products/CMS.js';
-import Coupon from './src/modules/orders/Coupon.js';
-import Cart from './src/modules/orders/Cart.js';
+import User from './src/modules/users/User.model.js';
+import Category from './src/modules/products/Category.model.js';
+import Product from './src/modules/products/Product.model.js';
+import CMS from './src/modules/cms/CMS.model.js';
+import Coupon from './src/modules/coupons/Coupon.model.js';
+import Cart from './src/modules/cart/Cart.model.js';
 import { hashPassword } from './src/core/security/bcrypt.js';
 
 dotenv.config();

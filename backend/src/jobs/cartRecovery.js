@@ -1,4 +1,4 @@
-import Cart from '../modules/orders/Cart.js';
+import Cart from '../modules/cart/Cart.model.js';
 import mailService from '../common/services/mail.service.js';
 import logger from '../config/logger.js';
 
