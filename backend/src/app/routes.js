@@ -7,6 +7,7 @@ import cartRouter from '../modules/cart/cart.routes.js';
 import couponRouter from '../modules/coupons/coupon.routes.js';
 import reviewRouter from '../modules/reviews/review.routes.js';
 import orderRouter from '../modules/orders/orders.routes.js';
+import systemControlRouter from '../modules/system-control/systemControl.routes.js';
 import ApiResponse from '../core/responses/ApiResponse.js';
 
 const router = Router();
@@ -27,5 +28,6 @@ router.use('/cart', cartRouter);
 router.use('/coupons', couponRouter);
 router.use('/reviews', reviewRouter);
 router.use('/orders', orderRouter);
+router.use('/system-control', systemControlRouter);
 
 export default router;

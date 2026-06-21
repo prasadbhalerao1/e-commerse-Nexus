@@ -17,6 +17,7 @@ import AuthUplink from './pages/AuthUplink.jsx';
 import ProfileMainframe from './pages/ProfileMainframe.jsx';
 import CheckoutUplink from './pages/CheckoutUplink.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import SystemPlayground from './pages/SystemPlayground.jsx';
 
 export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -47,6 +48,7 @@ export default function App() {
                 <Route path="/profile" element={<ProfileMainframe />} />
                 <Route path="/checkout" element={<CheckoutUplink />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/playground" element={<SystemPlayground />} />
               </Routes>
             </main>
 

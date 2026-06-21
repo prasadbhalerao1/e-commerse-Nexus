@@ -29,6 +29,9 @@ export default function Navbar({ onToggleCart }) {
           <Link to="/catalog" className="text-soft-ash hover:text-acid hover:underline underline-offset-4 transition-colors">
             //_CATALOG
           </Link>
+          <Link to="/playground" className="text-soft-ash hover:text-acid hover:underline underline-offset-4 transition-colors">
+            //_PLAYGROUND
+          </Link>
           
           {/* Admin Command Link */}
           {user && (user.role === 'admin' || user.role === 'superadmin' || user.role === 'editor') && (
