@@ -338,7 +338,7 @@
         }
       }
     },
-    "/orders/cart": {
+    "/cart": {
       "get": {
         "summary": "Get Authenticated Cart",
         "security": [{ "cookieAuth": [] }],
@@ -347,16 +347,7 @@
         }
       }
     },
-    "/orders/admin/analytics": {
-      "get": {
-        "summary": "Get Admin Analytics (Admin/Editor)",
-        "security": [{ "cookieAuth": [] }],
-        "responses": {
-          "200": { "description": "Returns GMV, conversion rates, active carts count, and 30-day sales history." }
-        }
-      }
-    },
-    "/orders/cart/sync": {
+    "/cart/sync": {
       "post": {
         "summary": "Merge Local Storage Cart",
         "security": [{ "cookieAuth": [] }],
@@ -389,62 +380,48 @@
         }
       }
     },
-    "/orders": {
+    "/coupons": {
       "post": {
-        "summary": "Checkout Placement",
-        "description": "Places order. Performs server-side price validations and inventory checks. Supports guest checkout.",
+        "summary": "Create Coupon (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["items", "shippingAddress", "billingAddress"],
+                "required": ["code", "discountType", "discountValue", "expiresAt"],
                 "properties": {
-                  "guestEmail": { "type": "string", "format": "email" },
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "required": ["product", "qty"],
-                      "properties": {
-                        "product": { "type": "string" },
-                        "qty": { "type": "number" }
-                      }
-                    }
-                  },
-                  "shippingAddress": { "type": "object" },
-                  "billingAddress": { "type": "object" },
-                  "paymentMethod": { "type": "string", "enum": ["Stripe", "PayPal"] },
-                  "couponCode": { "type": "string" }
+                  "code": { "type": "string" },
+                  "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+                  "discountValue": { "type": "number" },
+                  "minOrderValue": { "type": "number", "default": 0 },
+                  "usageLimit": { "type": "number", "nullable": true },
+                  "expiresAt": { "type": "string" }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Order submitted successfully." }
+          "201": { "description": "Coupon created successfully." }
         }
       }
     },
-    "/orders/{id}/invoice": {
+    "/coupons/validate": {
       "get": {
-        "summary": "Download PDF Invoice",
-        "security": [{ "cookieAuth": [] }],
+        "summary": "Validate Coupon Code",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "code", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "orderValue", "in": "query", "required": true, "schema": { "type": "number" } }
         ],
         "responses": {
-          "200": { "description": "Streams PDF format file." }
+          "200": { "description": "Coupon details if valid." },
+          "400": { "description": "Coupon expired, spent threshold too low, or usage limit exceeded." }
         }
       }
     },
-    "/orders/{productId}/reviews": {
+    "/reviews/{productId}": {
       "post": {
         "summary": "Post Product Review",
         "security": [{ "cookieAuth": [] }],
@@ -489,6 +466,137 @@
         ],
         "responses": {
           "200": { "description": "List of reviews." }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Checkout Placement",
+        "description": "Places order. Performs server-side price validations and inventory checks. Supports guest checkout.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items", "shippingAddress", "billingAddress"],
+                "properties": {
+                  "guestEmail": { "type": "string", "format": "email" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["product", "qty"],
+                      "properties": {
+                        "product": { "type": "string" },
+                        "qty": { "type": "number" }
+                      }
+                    }
+                  },
+                  "shippingAddress": { "type": "object" },
+                  "billingAddress": { "type": "object" },
+                  "paymentMethod": { "type": "string", "enum": ["Stripe", "PayPal"] },
+                  "couponCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Order submitted successfully." }
+        }
+      }
+    },
+    "/orders/my": {
+      "get": {
+        "summary": "Fetch Logged-in Orders History",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Returns list of client orders." }
+        }
+      }
+    },
+    "/orders/admin/analytics": {
+      "get": {
+        "summary": "Get Admin Analytics (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Returns GMV, conversion rates, active carts count, and 30-day sales history." }
+        }
+      }
+    },
+    "/orders/admin/all": {
+      "get": {
+        "summary": "Get All System Orders (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Returns list of all order objects and status counts summary." }
+        }
+      }
+    },
+    "/orders/admin/{id}": {
+      "put": {
+        "summary": "Update Fulfillment Status (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["fulfillmentStatus"],
+                "properties": {
+                  "fulfillmentStatus": { "type": "string", "enum": ["Unfulfilled", "Processing", "Shipped", "Delivered", "Returned"] },
+                  "trackingNumber": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order status updated and customer notified." }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "summary": "Get Order Details",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Order details returned." }
+        }
+      }
+    },
+    "/orders/{id}/invoice": {
+      "get": {
+        "summary": "Download PDF Invoice",
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Streams PDF format file." }
         }
       }
     }
