@@ -25,6 +25,50 @@ export default function ProductDetails() {
   const [reviewError, setReviewError] = useState('');
   const [reviewSuccess, setReviewSuccess] = useState('');
 
+  // Q&A States
+  const [qaInput, setQaInput] = useState('');
+  const [qaList, setQaList] = useState([]);
+
+  useEffect(() => {
+    if (product) {
+      if (product.slug.includes('lens')) {
+        setQaList([
+          { question: 'Is this eyepiece compatible with standard bio-lenses?', answer: 'YES. Standard Neuro-Link interface (v4.2) supported.' },
+          { question: 'Can I overlay terminal feeds directly?', answer: 'Correct. Direct terminal socket streams can be piped to the ocular buffer.' }
+        ]);
+      } else if (product.slug.includes('rig')) {
+        setQaList([
+          { question: 'What is the runtime capacity on a single recharge?', answer: 'Approximately 72 hours of uninterrupted vector processing.' }
+        ]);
+      } else {
+        setQaList([
+          { question: 'Does this augment emit ionizing radiation?', answer: 'Zero emission detected on external Geiger nodes.' }
+        ]);
+      }
+    }
+  }, [product]);
+
+  const handleAskQuestion = () => {
+    if (!qaInput.trim()) return;
+    const newQuestion = qaInput;
+    setQaList((prev) => [
+      ...prev,
+      { question: newQuestion, answer: 'Node processing... Encrypting reply payload...' }
+    ]);
+    setQaInput('');
+
+    setTimeout(() => {
+      setQaList((prev) => {
+        const updated = [...prev];
+        const last = updated.find((q) => q.question === newQuestion);
+        if (last) {
+          last.answer = 'TRANSMISSION_ACKNOWLEDGED. Mainframe registers standard compliance. Verified safe operational parameters.';
+        }
+        return [...updated];
+      });
+    }, 2000);
+  };
+
   const socketRef = useRef(null);
 
   const fetchProductDetails = async () => {
@@ -429,7 +473,67 @@ export default function ProductDetails() {
             </div>
           )}
         </div>
+      </div>
 
+    {/* Community Q&A Section */}
+    <div className="border-t border-acid/20 pt-10 space-y-6">
+        <div className="flex items-center gap-2 font-display text-base font-black tracking-widest text-acid">
+          <MessageSquare className="h-5 w-5" />
+          COMMUNITY_Q&A_LOGS
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Submit Question Form */}
+          <div className="space-y-4">
+            <div className="bg-sludge border border-acid/15 p-5 rounded clip-chamfer text-xs space-y-3">
+              <h3 className="text-xs font-bold text-f0f0f0 border-b border-acid/15 pb-2">// SUBMIT_NEW_QUESTION</h3>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Ask a community question..."
+                  value={qaInput}
+                  onChange={(e) => setQaInput(e.target.value)}
+                  className="w-full bg-void border border-acid/30 px-3 py-2 rounded text-f0f0f0 outline-none focus:border-acid"
+                />
+                <button
+                  type="button"
+                  onClick={handleAskQuestion}
+                  disabled={!qaInput.trim()}
+                  className="w-full py-2 bg-acid text-void font-display font-black text-xs tracking-wider rounded disabled:opacity-40"
+                >
+                  BROADCAST_QUESTION
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Q&A Timeline */}
+          <div className="lg:col-span-2 space-y-4">
+            <h3 className="text-xs font-bold text-f0f0f0">// Q&A_UPLINK_TIMELINE</h3>
+            {qaList.length === 0 ? (
+              <div className="p-6 border border-acid/10 rounded text-center text-xs text-soft-ash/40">
+                // NO QUERY STACKS BROADCASTED FOR THIS COMPONENT
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {qaList.map((qa, idx) => (
+                  <div key={idx} className="p-4 bg-sludge border border-acid/15 rounded clip-chamfer-sm space-y-3 text-xs">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-hazard font-bold">// QUESTION:</span>
+                      <p className="text-f0f0f0 font-semibold">{qa.question}</p>
+                    </div>
+                    {qa.answer && (
+                      <div className="pl-4 border-l-2 border-acid/40 space-y-1">
+                        <span className="text-[10px] text-acid font-bold">// SECURE_NODE_RESPONSE:</span>
+                        <p className="text-soft-ash/80 leading-relaxed font-sans">{qa.answer}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
     </div>
