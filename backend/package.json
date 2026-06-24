@@ -8,7 +8,7 @@
     "start": "node src/app/server.js",
     "dev": "nodemon src/app/server.js",
     "lint": "node --check seed.js && node --check src/app/server.js",
-    "build": "node build.js"
+    "build": "node --check src/app/server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
