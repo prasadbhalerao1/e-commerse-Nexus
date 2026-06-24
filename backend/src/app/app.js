@@ -6,7 +6,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
-import swaggerUiDist from 'swagger-ui-dist';
 import routes from './routes.js';
 import globalErrorHandler from '../core/exceptions/globalErrorHandler.js';
 import { NotFoundError } from '../core/errors.js';
@@ -21,14 +20,15 @@ const openapiDoc = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
 
 const app = express();
 
-// Security headers
+// Security headers — allow unpkg CDN for Swagger UI assets
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'"],
-      "style-src": ["'self'", "'unsafe-inline'"],
-      "img-src": ["'self'", "data:", "validator.swagger.io"]
+      "script-src": ["'self'", "'unsafe-inline'", "unpkg.com"],
+      "style-src": ["'self'", "'unsafe-inline'", "unpkg.com"],
+      "img-src": ["'self'", "data:", "validator.swagger.io"],
+      "worker-src": ["blob:"]
     }
   }
 }));
@@ -57,10 +57,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Swagger UI documentation server
-const swaggerUiDistPath = swaggerUiDist.getAbsoluteFSPath();
-app.use('/api-docs', express.static(swaggerUiDistPath, { index: false }));
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDoc));
+// Swagger UI documentation server — load assets from unpkg CDN to work in Vercel serverless
+const swaggerOptions = {
+  customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css',
+  customJs: [
+    'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js',
+    'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js'
+  ]
+};
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDoc, swaggerOptions));
 
 // API route entry point
 app.use('/api', routes);
