@@ -12,6 +12,19 @@ export default function AuthUplink() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Demo accounts pre-seeded in the database
+  const DEMO_ACCOUNTS = [
+    { label: 'USER',       email: 'test@example.com',  password: 'password123', role: 'user' },
+    { label: 'EDITOR',     email: 'editor@nexus.io',   password: 'password123', role: 'editor' },
+    { label: 'SUPERADMIN', email: 'admin@nexus.io',    password: 'password123', role: 'superadmin' },
+  ];
+
+  const ROLE_COLORS = {
+    user:       'border-soft-ash/40 text-soft-ash hover:border-soft-ash',
+    editor:     'border-hazard/60   text-hazard   hover:border-hazard',
+    superadmin: 'border-acid/60     text-acid     hover:border-acid',
+  };
+
   // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,13 +60,28 @@ export default function AuthUplink() {
     setLoading(true);
 
     try {
-      // Simulate Google Client OAuth ID Token authentication
       const mockIdToken = 'mock_google_oauth_token_' + Date.now();
       await loginWithGoogle(mockIdToken);
       setSuccess('GOOGLE_SSO_CONNECTION_STABLE. REDIRECTING...');
       setTimeout(() => navigate('/profile'), 1500);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (demoEmail, demoPassword) => {
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    setIsLogin(true);
+    try {
+      await login(demoEmail, demoPassword);
+      setSuccess('DEMO_CONNECTION_ESTABLISHED. LOGGING IN...');
+      setTimeout(() => navigate('/profile'), 1200);
+    } catch (err) {
+      setError(err.message || 'Demo login failed.');
     } finally {
       setLoading(false);
     }
@@ -158,6 +186,29 @@ export default function AuthUplink() {
             {loading ? 'TRANSMITTING_PACKETS...' : isLogin ? 'ESTABLISH_SESSION_LINK' : 'REGISTER_NEW_RUNNER'}
           </button>
         </form>
+
+        {/* Demo Account Quick-Login */}
+        <div className="relative my-6 text-center">
+          <hr className="border-acid/15" />
+          <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 bg-sludge text-[9px] text-soft-ash/50">// DEMO_ACCOUNTS //</span>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[9px] text-soft-ash/40 text-center mb-3">
+            Pre-seeded accounts — all use password: <span className="text-acid font-bold">password123</span>
+          </p>
+          {DEMO_ACCOUNTS.map((acc) => (
+            <button
+              key={acc.email}
+              onClick={() => handleDemoLogin(acc.email, acc.password)}
+              disabled={loading}
+              className={`w-full py-2 bg-void border text-xs font-bold rounded flex items-center justify-between px-4 transition-all duration-200 disabled:opacity-40 ${ROLE_COLORS[acc.role]}`}
+            >
+              <span className="font-mono text-[10px] opacity-70">{acc.email}</span>
+              <span className="font-display tracking-widest text-[10px]">{acc.label} →</span>
+            </button>
+          ))}
+        </div>
 
         {/* Divider */}
         <div className="relative my-6 text-center">
