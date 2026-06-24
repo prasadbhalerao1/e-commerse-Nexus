@@ -23,6 +23,23 @@ Express API for Project Nexus with MongoDB, JWT auth, role-based access, and Soc
 - Orders: create order, user history, admin analytics/list/update, invoice PDF
 - System Control: health telemetry, reseed, recovery sweep, webhook simulation (admin/editor only)
 
+## Role-Based Access Control (RBAC)
+
+The backend enforces server-side role validation using `protect` (session verification via JWT cookies) and `restrictTo(...roles)` middlewares. The endpoints are partitioned as follows:
+
+- **Public / Buyer Routes (`role: 'user'` or anonymous)**:
+  - Standard storefront browsing, catalog searches, cart operations, review submissions, and order placement.
+- **Operator Routes (`role: 'editor'` or `'superadmin'`)**:
+  - CMS adjustments (`PUT /api/cms`).
+  - Coupon generation (`POST /api/coupons`).
+  - Product CRUD and CSV export/import (`/api/products/*`).
+  - All orders list, status modification, and admin analytics (`/api/orders/admin/*`).
+  - System telemetry, manual recovery sweeps, and webhook simulations (`/api/system-control/*`).
+- **Superadmin Only Routes (`role: 'superadmin'`)**:
+  - Retrieve listing of all registered users (`GET /api/users/admin/all`).
+  - Delete user accounts (`DELETE /api/users/admin/:userId`).
+  - Full system control reseed operation (`POST /api/system-control/seed`).
+
 ## Real-Time Features
 
 - Product room spectator count updates

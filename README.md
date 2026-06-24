@@ -20,6 +20,18 @@ Project Nexus is a full-stack e-commerce application with a React frontend and a
 - Admin telemetry: health data, manual reseed, recovery job trigger, webhook simulation
 - Real-time: live product spectator count and stock update broadcasts
 
+## User Roles & Clearances
+
+Project Nexus uses a role-based access control (RBAC) system with three distinct security clearance levels:
+
+| Clearance Level | Primary Role | Key Capabilities & Accessible Modules | Pre-seeded Account |
+| :--- | :--- | :--- | :--- |
+| **Level 1** | `user` | Shop catalog, add items to cart, checkout, apply coupons, submit reviews, post Q&A questions, manage personal profile & addresses, download PDF invoices. | `test@example.com` |
+| **Level 2** | `editor` | All `user` capabilities + full access to **Admin Nexus** and **System Control Room**. Can manage inventory (SKU stocks, categories, CSV import/export), update order fulfillment statuses, configure homepage CMS, check system health telemetry, trigger manual cart sweeps, and simulate Stripe webhooks. | `editor@nexus.io` |
+| **Level 3** | `superadmin` | All `editor` capabilities + absolute operator access. Can view the list of all registered users in the database, delete user accounts, and execute database reseed/reset procedures. | `admin@nexus.io` |
+
+*Note: All pre-seeded demo accounts use `password123` as their default credentials.*
+
 ## Project Layout
 
 - backend: API server and business modules

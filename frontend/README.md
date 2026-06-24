@@ -21,6 +21,26 @@ React SPA for Project Nexus storefront, account, checkout, and admin dashboards.
 - Admin dashboard for analytics, order status changes, inventory controls, and CMS updates
 - System playground for operator-level backend control actions
 
+## User Clearances & Route Protection
+
+The frontend restricts access to specific sectors of the client application depending on the current user's security role:
+
+- **Anonymous / Guest & Regular Users (`user`)**:
+  - Access to storefront, catalog directory, product details, cart, and profile views.
+  - Hides `//_PLAYGROUND` and `//_ADMIN_NEXUS` links from the main navigation bar.
+  - If a user tries to access `/playground` or `/admin` manually, they are blocked by the `<RequireAdmin>` route guard. If unlogged, they redirect to `/auth`. If logged in as `user`, they see a custom `ACCESS_DENIED` security terminal error.
+- **Operators (`editor` & `superadmin`)**:
+  - Full access to the storefront features.
+  - Displays the `//_PLAYGROUND` and `//_ADMIN_NEXUS` options in the navigation bar.
+  - Fully authorized to access the `/admin` and `/playground` pages to invoke operator controls.
+
+### Quick Login Demo Buttons
+
+The login card at `/auth` contains three quick-access credentials buttons to easily swap between clearances during development:
+1. **`USER`**: morpheus.tester (credentials: `test@example.com` / `password123`)
+2. **`EDITOR`**: trinity.editor (credentials: `editor@nexus.io` / `password123`)
+3. **`SUPERADMIN`**: neo.superadmin (credentials: `admin@nexus.io` / `password123`)
+
 ## Environment Variables
 
 Copy frontend/.env.example to frontend/.env.
