@@ -11,6 +11,7 @@ import globalErrorHandler from '../core/exceptions/globalErrorHandler.js';
 import { NotFoundError } from '../core/errors.js';
 import { apiLimiter } from '../common/middleware/rateLimiter.js';
 import env from '../config/env.js';
+import landingHandler from './landing.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,6 +52,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDoc));
 
 // API route entry point
 app.use('/api', routes);
+
+// Root health check endpoint
+app.get('/', landingHandler);
 
 // Catch all unregistered routes
 app.use('*', (req, res, next) => {
