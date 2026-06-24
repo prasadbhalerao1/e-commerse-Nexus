@@ -22,10 +22,14 @@ const app = express();
 // Security headers
 app.use(helmet());
 
-// CORS configuration supporting credentials
+// CORS configuration supporting credentials with normalized origin checks
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || env.CORS_ORIGINS.includes(origin)) {
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '';
+    const isAllowed = !origin || env.CORS_ORIGINS.some(
+      (allowed) => allowed.replace(/\/$/, '') === normalizedOrigin
+    );
+    if (isAllowed) {
       callback(null, true);
       return;
     }
