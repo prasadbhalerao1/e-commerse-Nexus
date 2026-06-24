@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
+import swaggerUiDist from 'swagger-ui-dist';
 import routes from './routes.js';
 import globalErrorHandler from '../core/exceptions/globalErrorHandler.js';
 import { NotFoundError } from '../core/errors.js';
@@ -25,10 +26,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
-      "style-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
-      "img-src": ["'self'", "data:", "validator.swagger.io", "cdn.jsdelivr.net"],
-      "connect-src": ["'self'", "cdn.jsdelivr.net"]
+      "script-src": ["'self'", "'unsafe-inline'"],
+      "style-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "data:", "validator.swagger.io"]
     }
   }
 }));
@@ -58,14 +58,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // Swagger UI documentation server
-const swaggerOptions = {
-  customCssUrl: 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css',
-  customJs: [
-    'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js',
-    'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js'
-  ]
-};
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDoc, swaggerOptions));
+const swaggerUiDistPath = swaggerUiDist.getAbsoluteFSPath();
+app.use('/api-docs', express.static(swaggerUiDistPath, { index: false }));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDoc));
 
 // API route entry point
 app.use('/api', routes);
