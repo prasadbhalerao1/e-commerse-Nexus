@@ -29,12 +29,15 @@ export default function Navbar({ onToggleCart }) {
           <Link to="/catalog" className="text-soft-ash hover:text-acid hover:underline underline-offset-4 transition-colors">
             //_CATALOG
           </Link>
-          <Link to="/playground" className="text-soft-ash hover:text-acid hover:underline underline-offset-4 transition-colors">
-            //_PLAYGROUND
-          </Link>
+          {/* Playground/System Control Room Link */}
+          {user && (user.role === 'superadmin' || user.role === 'editor') && (
+            <Link to="/playground" className="text-soft-ash hover:text-acid hover:underline underline-offset-4 transition-colors">
+              //_PLAYGROUND
+            </Link>
+          )}
           
           {/* Admin Command Link */}
-          {user && (user.role === 'admin' || user.role === 'superadmin' || user.role === 'editor') && (
+          {user && (user.role === 'superadmin' || user.role === 'editor') && (
             <Link to="/admin" className="flex items-center gap-1 text-hazard hover:text-acid hover:underline underline-offset-4 transition-colors">
               <Shield className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">//_ADMIN_NEXUS</span>
