@@ -7,11 +7,27 @@
   },
   "servers": [
     {
-      "url": "http://localhost:5000/api",
-      "description": "Local Development Server"
+      "url": "/api",
+      "description": "API Gateway"
     }
   ],
   "paths": {
+    "/": {
+      "get": {
+        "summary": "Root System Status Check",
+        "description": "Returns details about database status, caching connection, server uptime, links to doc, and system resources.",
+        "servers": [
+          {
+            "url": "/"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "System status payload."
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "System Health Check",
@@ -241,7 +257,7 @@
         }
       }
     },
-    "/products/cms": {
+    "/cms": {
       "get": {
         "summary": "Get CMS Settings",
         "description": "Retrieves homepage hero banner and featured products.",
@@ -597,6 +613,57 @@
         ],
         "responses": {
           "200": { "description": "Streams PDF format file." }
+        }
+      }
+    },
+    "/system-control/health": {
+      "get": {
+        "summary": "Deep System Health Check (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Returns deep health check report including DB, Cache, memory and CPU statistics." }
+        }
+      }
+    },
+    "/system-control/seed": {
+      "post": {
+        "summary": "Reseed Database (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Database reset and reseeded with default data successfully." }
+        }
+      }
+    },
+    "/system-control/sweep": {
+      "post": {
+        "summary": "Trigger Cart Recovery Sweep (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "Abandoned cart sweep process completed." }
+        }
+      }
+    },
+    "/system-control/webhook": {
+      "post": {
+        "summary": "Mock Webhook (Admin/Editor)",
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["orderId", "status"],
+                "properties": {
+                  "orderId": { "type": "string" },
+                  "status": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Webhook process simulation complete." }
         }
       }
     }
