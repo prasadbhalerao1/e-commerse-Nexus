@@ -12,6 +12,7 @@ import { runCartRecoveryJob } from '../../jobs/cartRecovery.js';
 import { getIo } from '../notifications/socket.js';
 import asyncHandler from '../../common/utils/asyncHandler.js';
 import ApiResponse from '../../core/responses/ApiResponse.js';
+import { BadRequestError, NotFoundError } from '../../core/errors.js';
 
 // GET /api/system-control/health
 export const deepHealthCheck = asyncHandler(async (req, res) => {

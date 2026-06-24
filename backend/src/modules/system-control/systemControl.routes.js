@@ -5,8 +5,11 @@ import {
   triggerCartRecoverySweep, 
   mockWebhookUpdate 
 } from './systemControl.controller.js';
+import { protect, restrictTo } from '../../common/middleware/auth.js';
 
 const router = Router();
+
+router.use(protect, restrictTo('superadmin', 'editor'));
 
 router.get('/health', deepHealthCheck);
 router.post('/seed', reseedDatabase);

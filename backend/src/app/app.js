@@ -10,6 +10,7 @@ import routes from './routes.js';
 import globalErrorHandler from '../core/exceptions/globalErrorHandler.js';
 import { NotFoundError } from '../core/errors.js';
 import { apiLimiter } from '../common/middleware/rateLimiter.js';
+import env from '../config/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,7 +24,13 @@ app.use(helmet());
 
 // CORS configuration supporting credentials
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    if (!origin || env.CORS_ORIGINS.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('CORS policy: Origin not allowed'));
+  },
   credentials: true
 }));
 

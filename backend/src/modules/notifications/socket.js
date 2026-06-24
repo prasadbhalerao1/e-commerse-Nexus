@@ -1,12 +1,13 @@
 import { Server } from 'socket.io';
 import logger from '../../config/logger.js';
+import env from '../../config/env.js';
 
 let ioInstance = null;
 
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: '*', // Configured for standard development fallback
+      origin: env.CORS_ORIGINS,
       methods: ['GET', 'POST'],
       credentials: true
     }
@@ -22,6 +23,7 @@ export const initSocket = (server) => {
       socket.join(productId);
       const currentViewers = io.sockets.adapter.rooms.get(productId)?.size || 0;
       logger.debug(`Client joined product room ${productId}. Count: ${currentViewers}`);
+      io.to(productId).emit('spectatorCount', currentViewers);
       io.to(productId).emit('viewersCount', { productId, count: currentViewers });
     });
 
@@ -30,6 +32,7 @@ export const initSocket = (server) => {
       socket.leave(productId);
       const currentViewers = io.sockets.adapter.rooms.get(productId)?.size || 0;
       logger.debug(`Client left product room ${productId}. Count: ${currentViewers}`);
+      io.to(productId).emit('spectatorCount', currentViewers);
       io.to(productId).emit('viewersCount', { productId, count: currentViewers });
     });
 
@@ -37,6 +40,7 @@ export const initSocket = (server) => {
       for (const room of socket.rooms) {
         if (room !== socket.id) {
           const currentViewers = (io.sockets.adapter.rooms.get(room)?.size || 1) - 1;
+          io.to(room).emit('spectatorCount', Math.max(0, currentViewers));
           io.to(room).emit('viewersCount', { productId: room, count: Math.max(0, currentViewers) });
         }
       }
@@ -54,9 +58,9 @@ export const initSocket = (server) => {
 export const emitStockUpdate = (productId, countInStock) => {
   if (ioInstance) {
     logger.debug(`Broadcasting stock depletion for ${productId}: ${countInStock} items`);
-    ioInstance.to(productId.toString()).emit('stockUpdate', { productId, countInStock });
+    ioInstance.to(productId.toString()).emit('stockUpdate', { productId, count: countInStock, countInStock });
     // Also emit globally for catalog list alerts
-    ioInstance.emit('globalStockUpdate', { productId, countInStock });
+    ioInstance.emit('globalStockUpdate', { productId, count: countInStock, countInStock });
   }
 };
 

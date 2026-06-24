@@ -12,7 +12,12 @@ import { hashPassword } from './src/core/security/bcrypt.js';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ecom-nexus';
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error('Missing required environment variable: MONGO_URI');
+  process.exit(1);
+}
 
 const seedData = async () => {
   try {

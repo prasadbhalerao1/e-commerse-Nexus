@@ -1,4 +1,5 @@
 import { generateToken } from '../../core/security/jwt.js';
+import env from '../../config/env.js';
 
 export const sendTokenCookie = (user, statusCode, res, message = 'Success') => {
   const token = generateToken({ id: user._id, role: user.role });
@@ -6,8 +7,8 @@ export const sendTokenCookie = (user, statusCode, res, message = 'Success') => {
   const cookieOptions = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    secure: env.NODE_ENV === 'production',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax'
   };
 
   res.cookie('token', token, cookieOptions);

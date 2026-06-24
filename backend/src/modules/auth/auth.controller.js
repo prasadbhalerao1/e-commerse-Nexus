@@ -5,6 +5,7 @@ import { hashPassword, comparePassword } from '../../core/security/bcrypt.js';
 import { sendTokenCookie } from '../../common/utils/generateTokens.js';
 import asyncHandler from '../../common/utils/asyncHandler.js';
 import ApiResponse from '../../core/responses/ApiResponse.js';
+import env from '../../config/env.js';
 
 export const register = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
@@ -47,8 +48,8 @@ export const logout = asyncHandler(async (req, res) => {
   res.cookie('token', '', {
     expires: new Date(0),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    secure: env.NODE_ENV === 'production',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax'
   });
 
   return res.status(200).json(
@@ -83,10 +84,14 @@ export const googleLogin = asyncHandler(async (req, res) => {
       throw new BadRequestError('Invalid Google ID Token');
     }
     const data = await response.json();
-    const { email, given_name, family_name, email_verified } = data;
+    const { email, given_name, family_name, email_verified, aud } = data;
 
     if (!email_verified) {
       throw new BadRequestError('Google email address is not verified');
+    }
+
+    if (env.GOOGLE_CLIENT_ID && aud !== env.GOOGLE_CLIENT_ID) {
+      throw new BadRequestError('Google token audience does not match configured client ID');
     }
 
     let user = await User.findOne({ email });
