@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import swaggerUi from 'swagger-ui-express';
+// swagger-ui-express removed — using custom CDN-based handler instead
 import routes from './routes.js';
 import globalErrorHandler from '../core/exceptions/globalErrorHandler.js';
 import { NotFoundError } from '../core/errors.js';
@@ -20,18 +20,23 @@ const openapiDoc = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
 
 const app = express();
 
-// Security headers — allow unpkg CDN for Swagger UI assets
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "script-src": ["'self'", "'unsafe-inline'", "unpkg.com"],
-      "style-src": ["'self'", "'unsafe-inline'", "unpkg.com"],
-      "img-src": ["'self'", "data:", "validator.swagger.io"],
-      "worker-src": ["blob:"]
-    }
+// Security headers — allow unpkg CDN for Swagger UI assets on /api-docs
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api-docs')) {
+    return helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "unpkg.com"],
+          styleSrc: ["'self'", "'unsafe-inline'", "unpkg.com"],
+          imgSrc: ["'self'", "data:", "validator.swagger.io"],
+          workerSrc: ["blob:"]
+        }
+      }
+    })(req, res, next);
   }
-}));
+  return helmet()(req, res, next);
+});
 
 // CORS configuration supporting credentials with normalized origin checks
 app.use(cors({
@@ -57,15 +62,45 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Swagger UI documentation server — load assets from unpkg CDN to work in Vercel serverless
-const swaggerOptions = {
-  customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css',
-  customJs: [
-    'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js',
-    'https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js'
-  ]
-};
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDoc, swaggerOptions));
+// Serve raw OpenAPI spec as JSON for the Swagger UI to consume
+app.get('/api-docs/spec.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.status(200).json(openapiDoc);
+});
+
+// Swagger UI — fully self-contained HTML loading all assets from unpkg CDN.
+// swagger-ui-express is NOT used here because it injects local /api-docs/*.js
+// paths that Vercel cannot serve correctly from a serverless function.
+app.get('/api-docs', (req, res) => {
+  const specUrl = `${req.protocol}://${req.get('host')}/api-docs/spec.json`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Nexus — API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function () {
+      SwaggerUIBundle({
+        url: '${specUrl}',
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+        layout: 'StandaloneLayout',
+        deepLinking: true
+      });
+    };
+  </script>
+</body>
+</html>`;
+  res.setHeader('Content-Type', 'text/html');
+  res.status(200).send(html);
+});
 
 // API route entry point
 app.use('/api', routes);
