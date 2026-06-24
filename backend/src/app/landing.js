@@ -28,11 +28,17 @@ const landingHandler = (req, res) => {
     3: 'disconnecting'
   };
 
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+
   const healthData = {
     status: dbStatus === 1 ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     uptime: formatUptime(process.uptime()),
     environment: env.NODE_ENV || 'production',
+    links: {
+      apiDocs: `${baseUrl}/api-docs`,
+      apiHealth: `${baseUrl}/api/health`
+    },
     services: {
       database: {
         status: dbStateMap[dbStatus] || 'unknown',
