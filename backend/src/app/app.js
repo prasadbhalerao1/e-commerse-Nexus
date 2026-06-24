@@ -21,7 +21,17 @@ const openapiDoc = JSON.parse(fs.readFileSync(openapiPath, 'utf8'));
 const app = express();
 
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "script-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+      "style-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+      "img-src": ["'self'", "data:", "validator.swagger.io", "cdn.jsdelivr.net"],
+      "connect-src": ["'self'", "cdn.jsdelivr.net"]
+    }
+  }
+}));
 
 // CORS configuration supporting credentials with normalized origin checks
 app.use(cors({
