@@ -30,6 +30,7 @@ app.use((req, res, next) => {
           scriptSrc: ["'self'", "'unsafe-inline'", "unpkg.com"],
           styleSrc: ["'self'", "'unsafe-inline'", "unpkg.com"],
           imgSrc: ["'self'", "data:", "validator.swagger.io"],
+          connectSrc: ["'self'", "unpkg.com"],
           workerSrc: ["blob:"]
         }
       }
@@ -62,17 +63,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Serve raw OpenAPI spec as JSON for the Swagger UI to consume
-app.get('/api-docs/spec.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.status(200).json(openapiDoc);
-});
-
 // Swagger UI — fully self-contained HTML loading all assets from unpkg CDN.
-// swagger-ui-express is NOT used here because it injects local /api-docs/*.js
-// paths that Vercel cannot serve correctly from a serverless function.
+// Spec is embedded inline as a JS object so no network fetch is needed for spec.json,
+// avoiding connect-src issues and req.protocol mismatch behind Vercel's HTTPS terminator.
 app.get('/api-docs', (req, res) => {
-  const specUrl = `${req.protocol}://${req.get('host')}/api-docs/spec.json`;
+  const specJson = JSON.stringify(openapiDoc);
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -88,7 +83,7 @@ app.get('/api-docs', (req, res) => {
   <script>
     window.onload = function () {
       SwaggerUIBundle({
-        url: '${specUrl}',
+        spec: ${specJson},
         dom_id: '#swagger-ui',
         presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
         layout: 'StandaloneLayout',
