@@ -115,9 +115,9 @@ export function SkeletonBlock({
 }) {
   return (
     <div
-      className={`animate-pulse bg-sludge/70 border border-acid/5 ${height} ${width} ${rounded} ${shape} ${className}`}
+      className={`animate-pulse bg-acid/5 border border-acid/15 ${height} ${width} ${rounded} ${shape} ${className}`}
       style={{
-        boxShadow: "inset 0 0 10px rgba(57, 255, 20, 0.05)",
+        boxShadow: "0 0 8px rgba(57, 255, 20, 0.08), inset 0 0 10px rgba(57, 255, 20, 0.03)",
       }}
     />
   );

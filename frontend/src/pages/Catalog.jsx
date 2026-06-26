@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard.jsx';
 import { Search, SlidersHorizontal, RefreshCcw, LayoutGrid } from 'lucide-react';
+import { ProductSkeleton } from '../components/LoadingIndicator.jsx';
 
 export default function Catalog() {
   const [products, setProducts] = useState([]);
@@ -196,7 +197,7 @@ export default function Catalog() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-80 bg-sludge/50 border border-acid/10 rounded animate-pulse" />
+                <ProductSkeleton key={i} />
               ))}
             </div>
           ) : products.length === 0 ? (

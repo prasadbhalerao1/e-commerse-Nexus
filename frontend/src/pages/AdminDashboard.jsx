@@ -6,7 +6,7 @@ import {
   FileSpreadsheet, Upload, CheckCircle2, ChevronRight,
   Users, Trash2
 } from 'lucide-react';
-import { TerminalBootLoader } from '../components/LoadingIndicator.jsx';
+import { TerminalBootLoader, OrdersSkeleton, SkeletonBlock } from '../components/LoadingIndicator.jsx';
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -247,6 +247,52 @@ export default function AdminDashboard() {
     );
   }
 
+  const renderAnalyticsSkeleton = () => (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <SkeletonBlock height="h-24" rounded="rounded" shape="clip-chamfer" />
+        <SkeletonBlock height="h-24" rounded="rounded" shape="clip-chamfer" />
+        <SkeletonBlock height="h-24" rounded="rounded" shape="clip-chamfer" />
+      </div>
+      <div className="bg-sludge border border-acid/15 p-5 rounded clip-chamfer h-[350px]">
+        <SkeletonBlock height="h-full" />
+      </div>
+    </div>
+  );
+
+  const renderInventorySkeleton = () => (
+    <div className="grid grid-cols-1 gap-8">
+      <div className="bg-sludge border border-acid/15 p-5 rounded clip-chamfer space-y-4">
+        <SkeletonBlock height="h-6" width="w-1/4" />
+        <div className="space-y-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex gap-4">
+              <SkeletonBlock height="h-10" width="w-20" />
+              <SkeletonBlock height="h-10" className="flex-grow" />
+              <SkeletonBlock height="h-10" width="w-24" />
+              <SkeletonBlock height="h-10" width="w-24" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCMSSkeleton = () => (
+    <div className="bg-sludge border border-acid/15 p-5 rounded clip-chamfer space-y-4">
+      <SkeletonBlock height="h-6" width="w-1/3" />
+      <div className="space-y-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="space-y-1">
+            <SkeletonBlock height="h-3" width="w-1/6" />
+            <SkeletonBlock height="h-9" />
+          </div>
+        ))}
+        <SkeletonBlock height="h-10" width="w-36" />
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 font-mono text-soft-ash space-y-8">
       
@@ -299,10 +345,24 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {loading ? (
-        <div className="h-96 border border-acid/15 bg-sludge/20 rounded animate-pulse" />
-      ) : (
-        <div className="space-y-6">
+      <div className="space-y-6">
+        {loading ? (
+          activeTab === 'analytics' ? renderAnalyticsSkeleton() :
+          activeTab === 'fulfillment' ? <OrdersSkeleton /> :
+          activeTab === 'inventory' ? renderInventorySkeleton() :
+          activeTab === 'cms' ? renderCMSSkeleton() :
+          activeTab === 'users' ? (
+            <div className="bg-sludge border border-acid/15 p-5 rounded clip-chamfer space-y-4 animate-pulse">
+              <SkeletonBlock height="h-6" width="w-1/3" />
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <SkeletonBlock key={i} height="h-12" />
+                ))}
+              </div>
+            </div>
+          ) : null
+        ) : (
+          <>
           
           {/* TAB 1: ANALYTICS */}
           {activeTab === 'analytics' && analytics && (
@@ -614,9 +674,9 @@ export default function AdminDashboard() {
 
             </div>
           )}
-
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
     </div>
   );

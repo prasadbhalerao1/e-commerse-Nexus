@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import { Terminal, Shield, Sparkles, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ProductSkeleton } from '../components/LoadingIndicator.jsx';
 
 export default function Homepage() {
   const [cms, setCms] = useState(null);
@@ -101,7 +102,7 @@ export default function Homepage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-80 bg-sludge/50 border border-acid/10 rounded animate-pulse" />
+              <ProductSkeleton key={i} />
             ))}
           </div>
         ) : featured.length === 0 ? (
