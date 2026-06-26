@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import io from 'socket.io-client';
 import { Star, ShieldAlert, Users, ShoppingCart, MessageSquare, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { SkeletonBlock } from '../components/LoadingIndicator.jsx';
 
 export default function ProductDetails() {
   const { slug } = useParams();
@@ -196,11 +197,42 @@ export default function ProductDetails() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-16 animate-pulse space-y-8 font-mono">
-        <div className="h-6 w-32 bg-sludge rounded" />
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-1/2 aspect-square bg-sludge rounded" />
-          <div className="w-full md:w-1/2 h-96 bg-sludge rounded" />
+      <div className="max-w-7xl mx-auto px-6 py-10 font-mono text-soft-ash space-y-12 animate-pulse">
+        {/* Back Link placeholder */}
+        <SkeletonBlock height="h-4" width="w-28" />
+
+        <div className="flex flex-col md:flex-row gap-10">
+          {/* Image Panel placeholder */}
+          <div className="w-full md:w-1/2 space-y-4">
+            <SkeletonBlock height="aspect-square" rounded="rounded" shape="clip-chamfer" />
+            <div className="flex gap-2">
+              <SkeletonBlock height="h-16" width="w-16" />
+              <SkeletonBlock height="h-16" width="w-16" />
+            </div>
+          </div>
+
+          {/* Product details description placeholder */}
+          <div className="w-full md:w-1/2 space-y-6">
+            <div className="space-y-2">
+              <SkeletonBlock height="h-3" width="w-20" />
+              <SkeletonBlock height="h-8" width="w-3/4" />
+              <SkeletonBlock height="h-4.5" width="w-40" />
+            </div>
+            
+            {/* Spectator Active core counter */}
+            <SkeletonBlock height="h-10.5" width="w-72" />
+
+            <div className="py-4 border-t border-b border-acid/15">
+              <SkeletonBlock height="h-8" width="w-28" />
+            </div>
+
+            <div className="space-y-2">
+              <SkeletonBlock height="h-3" width="w-36" />
+              <SkeletonBlock height="h-16" />
+            </div>
+
+            <SkeletonBlock height="h-12" width="w-64" rounded="rounded-full" />
+          </div>
         </div>
       </div>
     );

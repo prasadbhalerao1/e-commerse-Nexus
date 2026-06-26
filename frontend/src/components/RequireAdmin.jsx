@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { ShieldAlert } from 'lucide-react';
+import { TerminalBootLoader } from './LoadingIndicator.jsx';
 
 /**
  * Route guard that allows access only to authenticated users with role
@@ -17,9 +18,8 @@ export default function RequireAdmin({ children }) {
   // Still resolving session — hold render to avoid flash
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-mono text-acid text-xs">
-        <ShieldAlert className="h-4 w-4 mr-2 animate-pulse" />
-        // VERIFYING UPLINK CREDENTIALS...
+      <div className="min-h-[80vh] flex items-center justify-center p-6 bg-void">
+        <TerminalBootLoader title="VERIFYING_ADMIN_UPLINK" />
       </div>
     );
   }

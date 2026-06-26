@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Terminal, MapPin, ClipboardList, Plus, Trash2, FileDown, CheckCircle2 } from 'lucide-react';
+import { ProfileSkeleton, OrdersSkeleton } from '../components/LoadingIndicator.jsx';
 
 export default function ProfileMainframe() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, loading } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
@@ -22,6 +23,14 @@ export default function ProfileMainframe() {
   const [lastName, setLastName] = useState(user?.lastName || '');
   const [profileSuccess, setProfileSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
+
+  // Sync profile details once user loads
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+    }
+  }, [user]);
 
   const fetchMyOrders = async () => {
     try {
@@ -123,6 +132,32 @@ export default function ProfileMainframe() {
       console.error('Invoice download failed:', err);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-10 font-mono text-soft-ash space-y-10">
+        {/* Page Title */}
+        <div className="flex items-center gap-3 border-b border-acid/20 pb-4 mb-8">
+          <Terminal className="h-6 w-6 text-acid animate-pulse" />
+          <h2 className="font-display font-black text-xl tracking-widest text-acid">
+            RUNNER_PROFILE_MAINFRAME
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Side: Profile Credentials & Addresses Book Skeletons */}
+          <div className="lg:col-span-1 space-y-6">
+            <ProfileSkeleton />
+          </div>
+
+          {/* Right Side: Past Orders timeline history list Skeleton */}
+          <div className="lg:col-span-2 space-y-6">
+            <OrdersSkeleton />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

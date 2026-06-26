@@ -5,9 +5,10 @@ import {
   ShieldCheck, BarChart3, ListFilter, Sliders, 
   FileSpreadsheet, Upload, CheckCircle2, ChevronRight 
 } from 'lucide-react';
+import { TerminalBootLoader } from '../components/LoadingIndicator.jsx';
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   // Tabs: 'analytics', 'fulfillment', 'inventory', 'cms'
   const [activeTab, setActiveTab] = useState('analytics');
@@ -172,6 +173,24 @@ export default function AdminDashboard() {
       setImportError(err.message);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-10 font-mono text-soft-ash space-y-8">
+        <div className="flex items-center justify-between border-b border-acid/20 pb-4 mb-6">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-6 w-6 text-hazard animate-pulse" />
+            <h2 className="font-display font-black text-xl tracking-widest text-hazard">
+              ADMIN_NEXUS_COMMAND
+            </h2>
+          </div>
+        </div>
+        <div className="min-h-[50vh] flex items-center justify-center p-6">
+          <TerminalBootLoader title="AUTHENTICATING_ADMIN" />
+        </div>
+      </div>
+    );
+  }
 
   if (!user || (user.role !== 'admin' && user.role !== 'superadmin' && user.role !== 'editor')) {
     return (

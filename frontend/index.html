@@ -7,7 +7,91 @@
     <title>PROJECT NEXUS // SECURE MAIN UPLINK</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        body {
+          margin: 0;
+          background-color: #000000 !important;
+          color: #39ff14 !important;
+          font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          overflow: hidden;
+        }
+        .boot-container {
+          max-width: 400px;
+          width: 90%;
+          padding: 20px;
+          border: 1px solid rgba(57, 255, 20, 0.25);
+          box-shadow: 0 0 15px rgba(57, 255, 20, 0.15);
+          background-color: #0a0c0a;
+          position: relative;
+        }
+        .boot-header {
+          border-bottom: 1px solid rgba(57, 255, 20, 0.2);
+          padding-bottom: 8px;
+          margin-bottom: 16px;
+          font-size: 11px;
+          letter-spacing: 2px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .boot-status {
+          font-size: 12px;
+          line-height: 1.6;
+          margin-bottom: 20px;
+        }
+        .boot-cursor {
+          display: inline-block;
+          width: 8px;
+          height: 15px;
+          background-color: #39ff14;
+          animation: blink 1s step-end infinite;
+          vertical-align: middle;
+          margin-left: 4px;
+        }
+        .progress-bar-container {
+          height: 4px;
+          width: 100%;
+          background-color: rgba(57, 255, 20, 0.1);
+          overflow: hidden;
+          position: relative;
+        }
+        .progress-bar-fill {
+          height: 100%;
+          background-color: #39ff14;
+          width: 30%;
+          position: absolute;
+          animation: loading-bar 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          box-shadow: 0 0 8px #39ff14;
+        }
+        @keyframes blink {
+          50% { opacity: 0; }
+        }
+        @keyframes loading-bar {
+          0% { left: -30%; width: 30%; }
+          50% { left: 30%; width: 40%; }
+          100% { left: 100%; width: 30%; }
+        }
+      </style>
+      <div class="boot-container">
+        <div class="boot-header">
+          <span>// PROJECT_NEXUS_UPLINK</span>
+          <span style="color: #ffea00; animation: blink 1.5s step-end infinite;">● LIVE</span>
+        </div>
+        <div class="boot-status">
+          <div>&gt; BOOT: INITIALIZE SEQUENCE</div>
+          <div>&gt; Dwnld: index_assets_bundle</div>
+          <div>&gt; Estb: gateway_secure_link<span class="boot-cursor"></span></div>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
