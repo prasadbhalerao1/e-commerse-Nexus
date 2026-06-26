@@ -3,15 +3,22 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   ShieldCheck, BarChart3, ListFilter, Sliders, 
-  FileSpreadsheet, Upload, CheckCircle2, ChevronRight 
+  FileSpreadsheet, Upload, CheckCircle2, ChevronRight,
+  Users, Trash2
 } from 'lucide-react';
 import { TerminalBootLoader } from '../components/LoadingIndicator.jsx';
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   
-  // Tabs: 'analytics', 'fulfillment', 'inventory', 'cms'
+  // Tabs: 'analytics', 'fulfillment', 'inventory', 'cms', 'users'
   const [activeTab, setActiveTab] = useState('analytics');
+
+  // Users state (Superadmin only)
+  const [users, setUsers] = useState([]);
+  const [usersSearch, setUsersSearch] = useState('');
+  const [usersSuccess, setUsersSuccess] = useState('');
+  const [usersError, setUsersError] = useState('');
 
   // Load States
   const [analytics, setAnalytics] = useState(null);
@@ -67,6 +74,15 @@ export default function AdminDashboard() {
         setFeaturedProds(cms?.featuredProducts?.map((p) => p._id).join(', ') || '');
       }
 
+      // 5. Fetch Users (if superadmin)
+      if (user && user.role === 'superadmin') {
+        const uRes = await fetch('/api/users/admin/all');
+        if (uRes.ok) {
+          const body = await uRes.json();
+          setUsers(body.data.users || []);
+        }
+      }
+
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
@@ -113,6 +129,37 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Failed to update stock:', err);
+    }
+  };
+
+  // Purge/Delete user account (Superadmin only)
+  const handleDeleteUser = async (userId) => {
+    setUsersError('');
+    setUsersSuccess('');
+    
+    // Safety check to prevent deleting yourself
+    if (user && user._id === userId) {
+      setUsersError('SELF_DESTRUCTION_PREVENTED: Cannot purge your own active session.');
+      return;
+    }
+
+    if (!window.confirm('CRITICAL ACTION: Purge this user identity from database?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/admin/${userId}`, {
+        method: 'DELETE'
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body.message || 'Purge protocol failed.');
+      }
+      setUsersSuccess('USER_PURGED_SUCCESSFULLY');
+      // Reload users list
+      fetchDashboardData();
+    } catch (err) {
+      setUsersError(err.message);
     }
   };
 
@@ -238,10 +285,18 @@ export default function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab('cms')}
-          className={`flex-1 py-3 font-bold flex items-center justify-center gap-1.5 transition-all ${activeTab === 'cms' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
+          className={`flex-1 py-3 font-bold ${user.role === 'superadmin' ? 'border-b sm:border-b-0 sm:border-r border-acid/15' : ''} flex items-center justify-center gap-1.5 transition-all ${activeTab === 'cms' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
         >
           <Sliders className="h-4 w-4" /> HOME_CMS
         </button>
+        {user.role === 'superadmin' && (
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`flex-1 py-3 font-bold flex items-center justify-center gap-1.5 transition-all ${activeTab === 'users' ? 'bg-acid/15 text-acid' : 'hover:bg-void'}`}
+          >
+            <Users className="h-4 w-4" /> RUNNER_REGISTRY
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -469,6 +524,94 @@ export default function AdminDashboard() {
                   COMMIT_CMS_CONFIGURATION
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* TAB 5: RUNNER REGISTRY (Superadmin only) */}
+          {activeTab === 'users' && user.role === 'superadmin' && (
+            <div className="space-y-6">
+              
+              {/* Header and Search */}
+              <div className="bg-sludge border border-acid/25 p-5 rounded clip-chamfer text-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-acid/15 pb-2">
+                  <h3 className="text-xs font-bold text-f0f0f0 flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-acid animate-pulse" />
+                    RUNNER_IDENTITIES_REGISTRY
+                  </h3>
+                  
+                  {/* Search filter input */}
+                  <input
+                    type="text"
+                    value={usersSearch}
+                    onChange={(e) => setUsersSearch(e.target.value)}
+                    placeholder="FILTER BY RUNNER NAME / EMAIL..."
+                    className="bg-void border border-acid/30 px-3 py-1.5 rounded outline-none w-full sm:w-64 focus:border-acid"
+                  />
+                </div>
+
+                {usersSuccess && <div className="p-2.5 border border-acid/40 bg-acid/5 text-[11px] text-acid font-bold rounded animate-pulse">{usersSuccess}</div>}
+                {usersError && <div className="p-2.5 border border-blaze/40 bg-blaze/5 text-[11px] text-blaze font-bold rounded">{usersError}</div>}
+
+                {/* Users List Grid Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-acid/25 text-[10px] text-acid/80">
+                        <th className="py-2">RUNNER NAME</th>
+                        <th className="py-2">EMAIL ADDRESS</th>
+                        <th className="py-2">CLEARANCE ROLE</th>
+                        <th className="py-2">JOINED</th>
+                        <th className="py-2 text-right">ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users
+                        .filter((u) => {
+                          const searchStr = usersSearch.toLowerCase();
+                          const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
+                          return fullName.includes(searchStr) || u.email.toLowerCase().includes(searchStr);
+                        })
+                        .map((u) => {
+                          const isSelf = u._id === user._id;
+                          // Role colors
+                          const roleColors = {
+                            superadmin: 'text-acid border-acid/30 bg-acid/5',
+                            editor: 'text-hazard border-hazard/30 bg-hazard/5',
+                            user: 'text-soft-ash/80 border-soft-ash/20 bg-soft-ash/5'
+                          };
+                          
+                          return (
+                            <tr key={u._id} className="border-b border-acid/10 hover:bg-void/40 transition-colors font-mono">
+                              <td className="py-3 font-bold font-sans uppercase">
+                                {u.firstName} {u.lastName} {isSelf && <span className="text-[9px] text-hazard ml-1">(YOU)</span>}
+                              </td>
+                              <td className="py-3 opacity-80">{u.email}</td>
+                              <td className="py-3">
+                                <span className={`text-[9px] border px-2 py-0.5 rounded font-bold uppercase ${roleColors[u.role] || roleColors.user}`}>
+                                  {u.role}
+                                </span>
+                              </td>
+                              <td className="py-3 opacity-60">
+                                {new Date(u.createdAt).toLocaleDateString()}
+                              </td>
+                              <td className="py-3 text-right font-sans">
+                                <button
+                                  onClick={() => handleDeleteUser(u._id)}
+                                  disabled={isSelf}
+                                  className="text-blaze hover:text-blaze/70 disabled:opacity-30 disabled:pointer-events-none p-1.5 border border-blaze/20 hover:border-blaze rounded transition-all bg-void"
+                                  title={isSelf ? "Self-deletion locked" : "Purge identity"}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
             </div>
           )}
 
